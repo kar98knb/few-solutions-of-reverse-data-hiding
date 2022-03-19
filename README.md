@@ -1,9 +1,9 @@
-## few-solutions-of-reverse-data-hiding
+# few-solutions-of-reverse-data-hiding
 
 这大概、可能就会是我的毕业论文中的实验代码。
 This could probably be my lab code for the graduation thesis.
 
-# 一点背景介绍(introduction)
+## 一点背景介绍(introduction)
 
 可逆信息隐藏，要求是将一段信息隐藏到载体（就是图片）里，但在复原时必须做到同时恢复信息与载体。
 Reverse data hiding, it requires to hide/embed some bits into some carriers(in my topic, only pics), 
@@ -13,7 +13,7 @@ but you have to gain the bits and carrier both completely while recovery
 Within the existing research(By 2022.3), although they distinguished this topic like spatial domain, frequency domain, 
 compression domain, encryption domain or other domains. There is not much innovation in the solution.
 
-# 空间域解决方案(solution to spatial domain)
+## 空间域解决方案(solution to spatial domain)
 1.无损压缩(lossless compression)
 2.直方图位移(histogram shifting)
 3.差分扩展(difference expansion)
