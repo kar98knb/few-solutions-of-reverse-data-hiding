@@ -4,9 +4,74 @@
 #include "opencv2/imgproc.hpp"
 #include <iostream>
 #include <cassert>
+#include"encoder.h"
 using namespace cv;
 using namespace std;
 
+int q = 2000;
+
+bool histIsHorizontal(Mat hist) {
+	int test = hist.at<float>(0);
+	for (int i = 0; i < 256; i++) {
+		if (hist.at<float>(i) != test) {
+			return false;
+		}
+	}
+	return true;
+}
+
+int returnPureCapacity(additonalInfo addInfo, Mat hist, int n) {
+	int maxIndex = addInfo.pairs[n].first, minIndex = addInfo.pairs[n].second;
+	return hist.at<float>(maxIndex) - hist.at<float>(minIndex);
+}
+
+pair<int, int> find_Nth_pair(additonalInfo addInfo, Mat hist) {
+
+	int minIndex1, minIndex2 , maxIndex = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		if ((hist.at<float>(i) > hist.at<float>(maxIndex))&&addInfo.mask[i]!=1) {
+			maxIndex = i;
+		}
+	}
+	for (int i = maxIndex; i < 256; i++)
+	{
+		if (hist.at<float>(i) == 0) {
+			minIndex1 = i;
+			break;
+		}
+		if ((hist.at<float>(i) < hist.at<float>(minIndex1)) && addInfo.mask[i] != 1) {
+			minIndex1 = i;
+			continue;
+		}
+		if (addInfo.mask[i] == 1) {
+			break;
+		}
+	}
+
+	for (int i = maxIndex; i >= 0; i--)
+	{
+		if (hist.at<float>(i) == 0) {
+			minIndex2 = i;
+			break;
+		}
+		if ((hist.at<float>(i) < hist.at<float>(minIndex2)) && addInfo.mask[i] != 1) {
+			minIndex2 = i;
+			continue;
+		}
+		if (addInfo.mask[i] == 1) {
+			break;
+		}
+	}
+	
+
+	if (hist.at<float>(minIndex2) < hist.at<float>(minIndex1)) {
+		return make_pair(maxIndex, minIndex2);
+	}
+	else {
+		return make_pair(maxIndex, minIndex1);
+	}
+}
 
 int main(int argc, char** argv)
 {
@@ -26,47 +91,13 @@ int main(int argc, char** argv)
 	Mat hist;
 	calcHist(&bgr_planes[0], 1, 0, Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
 
+	assert(!histIsHorizontal(hist));
 
-	int hist_w = 512, hist_h = 400;
-	//int bin_w = cvRound((double)hist_w / 256);
-	//Mat histImage(hist_h, hist_w, CV_8UC3, Scalar(0, 0, 0));
-	//normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
 
-	int minIndex = 0, maxIndex = 0;
-	int count = 0;
-	for (int i = 0; i < 256; i++)
-	{
-		/*line(histImage, Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
-			Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
-			Scalar(255, 0, 0), 2, 8, 0);*/
-		/*line(histImage, Point(bin_w * (i), 0),
-			Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
-			Scalar(255, 255, 255), 2, 8, 0);*/
-		//cout << i << ' ' << cvRound(hist.at<float>(i)) << endl;
-		if (hist.at<float>(i) == 0) {
-			minIndex = i;
-			break;
-		}
-	}
-	for (int i = 0; i < 256; i++)
-	{
-		if (hist.at<float>(i) > hist.at<float>(maxIndex)) {
-			maxIndex = i;
-		}
-	}
-	assert(hist.at<float>(maxIndex) != hist.at<float>(minIndex));
 
-	vector<pair<int, int>> pairs;
-	pairs.push_back(make_pair(maxIndex, minIndex));
+	additonalInfo* addInfo = new additonalInfo();
 
-	if (maxIndex > minIndex) {
-		
-	}
-	else {
-
-	}
-	/*imshow("calcHist Demo", histImage);
-	waitKey(0);*/
+	
 
 	return 0;
 }
