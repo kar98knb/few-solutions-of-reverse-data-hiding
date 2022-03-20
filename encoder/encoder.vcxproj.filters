@@ -15,6 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bmp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="run.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
