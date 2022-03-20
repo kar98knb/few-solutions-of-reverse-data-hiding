@@ -1,67 +1,72 @@
-#include<iostream>
-#include"bmp.h"
-#include <direct.h>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include "opencv2/imgproc.hpp"
+#include <iostream>
+#include <cassert>
+using namespace cv;
+using namespace std;
 
 
-BitMapFileHeader strHead;
-RGBQUAD strPla[256];//256色调色板
-BitMapInfoHeader strInfo;
+int main(int argc, char** argv)
+{
+	Mat image;
+	image = imread(argv[1], IMREAD_GRAYSCALE); // Read the file
+	if (image.empty())
+	{
+		cout << "Could not open or find the image" << endl;
+		exit(-1);
+	}
+	vector<Mat> bgr_planes;
+	split(image, bgr_planes);
+	int histSize = 256;
+	float range[] = { 0, 256 }; //the upper boundary is exclusive
+	const float* histRange[] = { range };
+	bool uniform = true, accumulate = false;
+	Mat hist;
+	calcHist(&bgr_planes[0], 1, 0, Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
 
-int main() {
-	char* currentPath = _getcwd(NULL, 256);
-	string resPath = currentPath;
-	for (size_t i = resPath.length() - 1; i > 0; i--) {
-		if (resPath[i] != '\\') { continue; }
-		else { 
-			resPath = resPath.substr(0,i); 
-			resPath += "\\res";
+
+	int hist_w = 512, hist_h = 400;
+	//int bin_w = cvRound((double)hist_w / 256);
+	//Mat histImage(hist_h, hist_w, CV_8UC3, Scalar(0, 0, 0));
+	//normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+
+	int minIndex = 0, maxIndex = 0;
+	int count = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		/*line(histImage, Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+			Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
+			Scalar(255, 0, 0), 2, 8, 0);*/
+		/*line(histImage, Point(bin_w * (i), 0),
+			Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
+			Scalar(255, 255, 255), 2, 8, 0);*/
+		//cout << i << ' ' << cvRound(hist.at<float>(i)) << endl;
+		if (hist.at<float>(i) == 0) {
+			minIndex = i;
 			break;
 		}
 	}
-
-	string testPath = resPath + "\\lena.bmp";
-
-	int width, height;//图片的宽度和高度
-	const char* c_s = testPath.c_str();
-	FILE* fpi = fopen(c_s, "rb"); //请一定指定参数为'rb'，在'r'模式下读调色板的时候会发生文件内指针跳转错误
-
-	WORD bfType;
-	fread(&bfType, 1, sizeof(WORD), fpi);
-	if (0x4d42 != bfType)
+	for (int i = 0; i < 256; i++)
 	{
-		cout << "the file is not a bmp file!" << endl;
-		return NULL;
+		if (hist.at<float>(i) > hist.at<float>(maxIndex)) {
+			maxIndex = i;
+		}
 	}
+	assert(hist.at<float>(maxIndex) != hist.at<float>(minIndex));
 
+	vector<pair<int, int>> pairs;
+	pairs.push_back(make_pair(maxIndex, minIndex));
 
-	//读取bmp文件的文件头和信息头
-	fread(&strHead, 1, sizeof(tagBitMapFileHeader), fpi);
-	fread(&strInfo, 1, sizeof(tagBitMapInfoHeader), fpi);
-
-	for (unsigned int nCounti = 0; nCounti < strInfo.biClrUsed; nCounti++)
-	{
-		fread((char*)&(strPla[nCounti].rgbBlue), 1, sizeof(BYTE), fpi);
-		fread((char*)&(strPla[nCounti].rgbGreen), 1, sizeof(BYTE), fpi);
-		fread((char*)&(strPla[nCounti].rgbRed), 1, sizeof(BYTE), fpi);
-		fread((char*)&(strPla[nCounti].rgbReserved), 1, sizeof(BYTE), fpi);
+	if (maxIndex > minIndex) {
+		
 	}
-
-	width = strInfo.biWidth;
-	height = strInfo.biHeight;
-	//图像每一行的字节数必须是4的整数倍
-	width = (width * sizeof(ImageData) + 3) / 4 * 4;
-	ImageData* imagedata = (ImageData*)malloc(sizeof(ImageData) * width * height);
-	if (imagedata == NULL) { return -1; }
 	else {
-		//读出图片的像素数据
-		fread(imagedata, sizeof(ImageData) * width, height, fpi);
-		fclose(fpi);
+
 	}
-	
-
-	//TODO:编码
-
-
+	/*imshow("calcHist Demo", histImage);
+	waitKey(0);*/
 
 	return 0;
 }
