@@ -78,6 +78,10 @@ pair<int, int> find_Nth_pair(additonalInfo addInfo, Mat hist) {
 
 int main(int argc, char** argv)
 {
+	if (argc != 3) {
+		cout << "请输入两个参数，第一个为嵌入图片路径，第二个为要嵌入的信息" << endl ;
+		return -1;
+	}
 	Mat image;
 	image = imread(argv[1], IMREAD_GRAYSCALE); // Read the file
 	string toEmbed = argv[2];
@@ -163,13 +167,13 @@ int main(int argc, char** argv)
 
 here:
 	imwrite("embed.bmp", image);
-	ofstream OutFile("addinfo.txt"); //利用构造函数创建txt文本，并且打开该文本
-	OutFile << "length:" <<addInfo.toembedLength<<endl ; //把字符串内容"This is a Test!"，写入Test.txt文件
+	ofstream OutFile("addinfo.txt"); 
+	OutFile << "length:" <<addInfo.toembedLength<<endl ; 
 	OutFile << "mask:" ;
 	for (int i = 0; i < 256; i++) {
 		OutFile << addInfo.mask[i];
 	}
-	OutFile.close(); //关闭Test.txt文件
+	OutFile.close();
 
 	cout << "success!" << endl;
 
