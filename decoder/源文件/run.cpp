@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-
 	int length = root["length"].asInt();
 	vector<int> mask;
 	for (int i = 0; i < 256; i++) {
@@ -40,6 +39,65 @@ int main(int argc, char** argv) {
 	}
 
 	
+	for (int flag = 0, index = 0, i = 0; i < 256; i++) {
+		if (mask[i] == 3) { flag = 1; index = i;}
+		else if (mask[i] == -2) { flag = -1;  index = i;}
+
+		if (flag == 0) {continue;}
+		else if (flag == 1) {
+			if (mask[i] == 2) {
+				mask[index+1] = 2;
+				mask[i] = 1;
+				flag = 0;
+			}
+		}
+		else if (flag == -1) {
+			if (mask[i] == -3) {
+				mask[index] = -2;
+				mask[i-1] = -1;
+				flag = 0;
+			}
+		}
+	}
+
+
+	string embedInfo;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j++) {
+			if (mask[image.at<uchar>(i, j)] == 0) {
+				continue;
+			}
+			else if (mask[image.at<uchar>(i, j)] == 1) {
+				image.at<uchar>(i, j)--;
+			}
+			else if (mask[image.at<uchar>(i, j)] == 2) {
+				embedInfo += "1";
+				image.at<uchar>(i, j)--;
+			}
+			else if (mask[image.at<uchar>(i, j)] == 3) {
+				embedInfo += "0";
+			}
+			else if (mask[image.at<uchar>(i, j)] == -1) {
+				image.at<uchar>(i, j)++;
+			}
+			else if (mask[image.at<uchar>(i, j)] == -2) {
+				embedInfo += "1";
+				image.at<uchar>(i, j)++;
+			}
+			else if (mask[image.at<uchar>(i, j)] == -3) {
+				embedInfo += "0";
+			}
+
+			if (embedInfo.length() == length) {
+				goto here;
+			}
+		}
+	}
+
+
+here:
+	imwrite("output.bmp", image);
+	cout << embedInfo << endl;
 
 	return 0;
 }
