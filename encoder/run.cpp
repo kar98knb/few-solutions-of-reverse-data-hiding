@@ -6,6 +6,7 @@
 #include<fstream>
 #include <cassert>
 #include"encoder.h"
+#include<json/json.h>
 using namespace cv;
 using namespace std;
 
@@ -167,12 +168,17 @@ int main(int argc, char** argv)
 
 here:
 	imwrite("embed.bmp", image);
-	ofstream OutFile("addinfo.txt"); 
-	OutFile << "length:" <<addInfo.toembedLength<<endl ; 
-	OutFile << "mask:" ;
-	for (int i = 0; i < 256; i++) {
-		OutFile << addInfo.mask[i];
+	Json::Value root;
+	Json::FastWriter writer;
+	root["length"] = addInfo.toembedLength;
+	for (int i = 0; i < addInfo.mask.size(); i++) {
+		root["mask"][i] = addInfo.mask[i];
 	}
+
+	string json_file = writer.write(root);
+
+	ofstream OutFile("addinfo.json"); 
+	OutFile << json_file;
 	OutFile.close();
 
 	cout << "success!" << endl;
