@@ -10,7 +10,6 @@
 using namespace cv;
 using namespace std;
 
-int q = 2000;
 
 bool histIsHorizontal(Mat hist) {
 	int test = hist.at<float>(0);
@@ -96,15 +95,19 @@ int main(int argc, char** argv)
 	const float* histRange[] = { range };
 	bool uniform = true, accumulate = false;
 	Mat hist;
+	additonalInfo addInfo(toEmbed.length(), image.at<uchar>(0, 0), image.at<uchar>(0, 1));
+	image.at<uchar>(0, 0) = 0; image.at<uchar>(0, 1) = 0;
 	calcHist(&image, 1, 0, Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
 
 	assert(!histIsHorizontal(hist));
 
 
-
-	additonalInfo addInfo(toEmbed.length());
+	
+	
+	
 	int toEmbedIndex = 0;
 
+	//维护一个描述直方图状态的mask
 	while (toEmbedIndex <= toEmbed.length()) {
 		pair<int, int> thisPair = find_Nth_pair(addInfo, hist);
 		int thisCapacity = returnPureCapacity(thisPair, hist);
@@ -112,6 +115,7 @@ int main(int argc, char** argv)
 			cout << "fail to embed: info is too long" << endl;
 			return -1;
 		}
+		addInfo.pairs.push_back(thisPair);
 		toEmbedIndex += thisCapacity;
 		//峰值点在零值点右侧
 		if (thisPair.first>thisPair.second) {
@@ -131,42 +135,166 @@ int main(int argc, char** argv)
 		}
 	}
 
+
+	
+
+
+	//初始嵌入
+	image.at<uchar>(0, 0) = addInfo.pairs[0].first;
+	image.at<uchar>(0, 1) = addInfo.pairs[0].second;
+
+	//手动循环展开,寻找非零零值点的位置
+	for (int pairIndex = 0; pairIndex < addInfo.pairs.size(); pairIndex++) {
+		pair<int, int>thispair = addInfo.pairs[pairIndex];
+		if (hist.at<float>(thispair.second) != 0) {
+			int countForBitmap = 0;
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j) == thispair.second) {
+					addInfo.bitmap1.push_back(make_pair(0, j));
+					countForBitmap++;
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) == thispair.second) {
+						addInfo.bitmap1.push_back(make_pair(i, j));
+						countForBitmap++;
+					}
+				}
+			}
+			addInfo.bitmapMinLength.push_back(countForBitmap);
+		}
+	}
+
+	/*
+	* 上述代码完成了初始处理，开始嵌入信息
+	* 
+	* 仍然使用循环展开
+	* 
+	* 这里是这个算法复杂度的主要组成部分，时间复杂度为O(3KMN)，K为峰值点零值点对数，M，N为图像行列数
+	*/
+
+	toEmbed = addInfo.AddInfo() + toEmbed;
 	int embedIndex = 0;
-	for (int i = 0; i < image.rows; i++){
-		for (int j = 0; j < image.cols; j++){
-			if (addInfo.mask[image.at<uchar>(i, j)] == 1) {
-				image.at<uchar>(i, j)++;
+	for (int pairIndex = 0; pairIndex < addInfo.pairs.size(); pairIndex++) {
+		pair<int, int>thispair = addInfo.pairs[pairIndex];
+		if (thispair.first > thispair.second) {
+			//第一趟处理：先将非零零值点置0
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j)==thispair.second) {
+					image.at<uchar>(0, j) = 0;
+				}
 			}
-			else if (addInfo.mask[image.at<uchar>(i, j)] == -1) {
-				image.at<uchar>(i, j)--;
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) == thispair.second) {
+						image.at<uchar>(i, j) = 0;
+					}
+				}
+			}
+
+			//第二趟处理：移位
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j) > thispair.second && image.at<uchar>(0, j) < thispair.first) {
+					image.at<uchar>(0, j)--;
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) > thispair.second && image.at<uchar>(i, j) < thispair.first) {
+						image.at<uchar>(i, j)--;
+					}
+				}
+			}
+
+			//第三趟处理：嵌入
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j)==thispair.first) {
+					if (toEmbed[embedIndex] == '1') {
+						image.at<uchar>(0, j)--;
+					}
+					embedIndex++;
+					if (embedIndex == toEmbed.length() - 1) {
+						goto here;
+					}
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) == thispair.first) {
+						if (toEmbed[embedIndex] == '1') {
+							image.at<uchar>(i, j)--;
+						}
+						embedIndex++;
+						if (embedIndex == toEmbed.length() - 1) {
+							goto here;
+						}
+					}
+				}
+			}
+		}
+		else {
+			//第一趟处理：先将非零零值点置0
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j) == thispair.second) {
+					image.at<uchar>(0, j) = 0;
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) == thispair.second) {
+						image.at<uchar>(i, j) = 0;
+					}
+				}
+			}
+
+			//第二趟处理：嵌入、移位
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j) < thispair.second && image.at<uchar>(0, j) > thispair.first) {
+					image.at<uchar>(0, j)++;
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) < thispair.second && image.at<uchar>(i, j) > thispair.first) {
+						image.at<uchar>(i, j)++;
+					}
+				}
+			}
+
+			//第三趟处理：嵌入
+			for (int j = 2; j < image.cols; j++) {
+				if (image.at<uchar>(0, j) == thispair.first) {
+					if (toEmbed[embedIndex] == '1') {
+						image.at<uchar>(0, j)++;
+					}
+					embedIndex++;
+					if (embedIndex == toEmbed.length() - 1) {
+						goto here;
+					}
+				}
+			}
+			for (int i = 1; i < image.rows; i++) {
+				for (int j = 0; j < image.cols; j++) {
+					if (image.at<uchar>(i, j) == thispair.first) {
+						if (toEmbed[embedIndex] == '1') {
+							image.at<uchar>(i, j)++;
+						}
+						embedIndex++;
+						if (embedIndex == toEmbed.length() - 1) {
+							goto here;
+						}
+					}
+				}
 			}
 		}
 	}
 
-	for (int i = 0; i < image.rows; i++) {
-		for (int j = 0; j < image.cols; j++) {
-			if (addInfo.mask[image.at<uchar>(i, j)] == 3) {
-				if (toEmbed[embedIndex] == '1') {
-					image.at<uchar>(i, j)++;
-				}
-				
-			}
-			else if (addInfo.mask[image.at<uchar>(i, j)] == -3) {
-				if (toEmbed[embedIndex] == '1') {
-					image.at<uchar>(i, j)--;
-				}
-			}
-			else {
-				continue;
-			}
-			embedIndex++;
-			if (embedIndex == toEmbed.length()) {
-				goto here;
-			}
-		}
-	}
 
+
+	
 here:
+
 	imwrite("embed.bmp", image);
 	Json::Value root;
 	Json::FastWriter writer;
@@ -174,6 +302,9 @@ here:
 	for (int i = 0; i < addInfo.mask.size(); i++) {
 		root["mask"][i] = addInfo.mask[i];
 	}
+
+	root["imageGrayscaleAt_0_0"] = addInfo.imageGrayscaleAt_0_0;
+	root["imageGrayscaleAt_0_1"] = addInfo.imageGrayscaleAt_0_1;
 
 	string json_file = writer.write(root);
 
