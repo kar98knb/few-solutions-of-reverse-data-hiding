@@ -4,8 +4,9 @@
 using namespace std;
 class additonalInfo {
 public:
-	additonalInfo(){}
-	additonalInfo(int length, int imageGrayscale_0_0, int imageGrayscale_0_1) {
+	additonalInfo(int rows, int cols) :rows(rows), cols(cols) {}
+	additonalInfo(int length, int imageGrayscale_0_0, int imageGrayscale_0_1,
+		int rows, int cols):rows(rows),cols(cols) {
 		for (int i = 0; i < 256; i++) {
 			this->mask.push_back(0);
 		}
@@ -15,16 +16,17 @@ public:
 	};
 
 	vector<int> mask;  //已废弃
-
-	int imageGrayscaleAt_0_0 = -1, imageGrayscaleAt_0_1 = -1;  //固定16bits
+	int rows;
+	int cols;
+	int imageGrayscaleAt_0_0 = 0, imageGrayscaleAt_0_1 = 0;  //固定16bits
 	vector<pair<int, int>> pairs;  //每对8+8bits
-	int toembedLength = -1;  //  固定16bits
+	int toembedLength = 0;  //  固定16bits
 	vector<pair<int,int>> bitmap1;   //每个位置16bits
-	vector<int> bitmapMinLength;     //最多128对，即最多128个非零零值点，每个零值点的最大值为107，所以不能为这个数组分配固定长度
-	int lengthForBitmapMinLength = 0;    //上述数组的长度，也即非零零值点的个数，固定8bits
+	vector<int> bitmapMinLength;     //最多128对，即最多128个零值点，每个零值点的最大值为107，所以不能为这个数组分配固定长度
+	int lengthForBitmapMinLength = 0;    //上述数组的长度，也即零值点的个数，固定8bits
 	//vector<pair<unsigned short, unsigned short>> bitmap2;
 
-	int totalAddLength = -1;
+	int totalAddLength = 0;
 
 	//这个函数在转换成员变量时会将新变量添加到字符前，因此decoder端先读到的内容在这个函数里写在最后
 	string AddInfo() {
@@ -33,11 +35,11 @@ public:
 		//转换bitmap1
 		for (int i = bitmap1.size() - 1; i >= 0; i--) {
 			int row = pairs[i].first, col = pairs[i].second;
-			for (int j = 0; j < 8; j++) {
+			for (int j = 1; j < cols; j <<= 1) {
 				extendInfo = to_string(col & 1) + extendInfo;
 				col >>= 1;
 			}
-			for (int j = 0; j < 8; j++) {
+			for (int j = 1; j < rows; j <<= 1) {
 				extendInfo = to_string(row & 1) + extendInfo;
 				row >>= 1;
 			}

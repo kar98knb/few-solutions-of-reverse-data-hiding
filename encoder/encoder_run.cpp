@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	const float* histRange[] = { range };
 	bool uniform = true, accumulate = false;
 	Mat hist;
-	additonalInfo addInfo(toEmbed.length(), image.at<uchar>(0, 0), image.at<uchar>(0, 1));
+	additonalInfo addInfo(toEmbed.length(), image.at<uchar>(0, 0), image.at<uchar>(0, 1),image.rows,image.cols);
 	image.at<uchar>(0, 0) = 0; image.at<uchar>(0, 1) = 0;
 	calcHist(&image, 1, 0, Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 	image.at<uchar>(0, 0) = addInfo.pairs[0].first;
 	image.at<uchar>(0, 1) = addInfo.pairs[0].second;
 
-	//手动循环展开,寻找非零零值点的位置
+	//手动循环展开,寻找零值点的位置，记录非零零值点每个点的个数
 	for (int pairIndex = 0; pairIndex < addInfo.pairs.size(); pairIndex++) {
 		pair<int, int>thispair = addInfo.pairs[pairIndex];
 		if (hist.at<float>(thispair.second) != 0) {
@@ -164,6 +164,9 @@ int main(int argc, char** argv)
 			}
 			addInfo.bitmapMinLength.push_back(countForBitmap);
 		}
+		else {
+			addInfo.bitmapMinLength.push_back(0);
+		}
 	}
 
 	/*
@@ -175,7 +178,9 @@ int main(int argc, char** argv)
 	*/
 
 	toEmbed = addInfo.AddInfo() + toEmbed;
+	assert(toEmbed.length()==(addInfo.toembedLength+addInfo.totalAddLength));
 	int embedIndex = 0;
+	int count1 = 0, count2 = 0, count3 = 0;
 	for (int pairIndex = 0; pairIndex < addInfo.pairs.size(); pairIndex++) {
 		pair<int, int>thispair = addInfo.pairs[pairIndex];
 		if (thispair.first > thispair.second) {
@@ -214,7 +219,7 @@ int main(int argc, char** argv)
 						image.at<uchar>(0, j)--;
 					}
 					embedIndex++;
-					if (embedIndex == toEmbed.length() - 1) {
+					if (embedIndex == toEmbed.length()) {
 						goto here;
 					}
 				}
@@ -226,7 +231,7 @@ int main(int argc, char** argv)
 							image.at<uchar>(i, j)--;
 						}
 						embedIndex++;
-						if (embedIndex == toEmbed.length() - 1) {
+						if (embedIndex == toEmbed.length()) {
 							goto here;
 						}
 					}
@@ -248,7 +253,7 @@ int main(int argc, char** argv)
 				}
 			}
 
-			//第二趟处理：嵌入、移位
+			//第二趟处理：移位
 			for (int j = 2; j < image.cols; j++) {
 				if (image.at<uchar>(0, j) < thispair.second && image.at<uchar>(0, j) > thispair.first) {
 					image.at<uchar>(0, j)++;
@@ -269,7 +274,7 @@ int main(int argc, char** argv)
 						image.at<uchar>(0, j)++;
 					}
 					embedIndex++;
-					if (embedIndex == toEmbed.length() - 1) {
+					if (embedIndex == toEmbed.length()) {
 						goto here;
 					}
 				}
@@ -281,7 +286,7 @@ int main(int argc, char** argv)
 							image.at<uchar>(i, j)++;
 						}
 						embedIndex++;
-						if (embedIndex == toEmbed.length() - 1) {
+						if (embedIndex == toEmbed.length()) {
 							goto here;
 						}
 					}

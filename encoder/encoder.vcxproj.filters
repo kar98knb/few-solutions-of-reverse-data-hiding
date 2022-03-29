@@ -20,7 +20,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="run.cpp">
+    <ClCompile Include="encoder_run.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
