@@ -27,13 +27,32 @@ int returnPureCapacity(pair<int, int> thisPair, Mat hist) {
 
 pair<int, int> find_Nth_pair(additonalInfo addInfo, Mat hist) {
 
-	int minIndex1, minIndex2 , maxIndex = 0;
-	for (int i = 0; i < 256; i++)
-	{
-		if ((hist.at<float>(i) > hist.at<float>(maxIndex))&&addInfo.mask[i]==0) {
-			maxIndex = i;
+	int minIndex1, minIndex2 , maxIndex;
+	if (addInfo.mask[0] != 0) {
+		bool flag = false;;
+		for (int i = 0; i < 256; i++)
+		{
+			if (!flag&&addInfo.mask[i] == 0) {
+				maxIndex = i;
+				flag = true;
+			}
+			if (flag) {
+				if ((hist.at<float>(i) > hist.at<float>(maxIndex)) && addInfo.mask[i] == 0) {
+					maxIndex = i;
+				}
+			}
 		}
 	}
+	else {
+		maxIndex = 0;
+		for (int i = 0; i < 256; i++)
+		{
+			if ((hist.at<float>(i) > hist.at<float>(maxIndex)) && addInfo.mask[i] == 0) {
+				maxIndex = i;
+			}
+		}
+	}
+	
 	minIndex1 = maxIndex;
 	minIndex2 = maxIndex;
 	for (int i = maxIndex; i < 256; i++)
@@ -103,7 +122,6 @@ int main(int argc, char** argv)
 	calcHist(&image, 1, 0, Mat(), hist, 1, &histSize, histRange, uniform, accumulate);
 
 	assert(!histIsHorizontal(hist));
-
 
 	
 	

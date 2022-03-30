@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "encoder", "encoder\encoder.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "checker", "checker\checker.vcxproj", "{AC1BD4FE-59AF-4338-8D46-E90DCC3FB081}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{AC1BD4FE-59AF-4338-8D46-E90DCC3FB081}.Release|x64.Build.0 = Release|x64
 		{AC1BD4FE-59AF-4338-8D46-E90DCC3FB081}.Release|x86.ActiveCfg = Release|Win32
 		{AC1BD4FE-59AF-4338-8D46-E90DCC3FB081}.Release|x86.Build.0 = Release|Win32
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Debug|x64.ActiveCfg = Debug|x64
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Debug|x64.Build.0 = Debug|x64
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Debug|x86.ActiveCfg = Debug|Win32
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Debug|x86.Build.0 = Debug|Win32
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Release|x64.ActiveCfg = Release|x64
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Release|x64.Build.0 = Release|x64
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Release|x86.ActiveCfg = Release|Win32
+		{34E43E45-C1DB-4BAF-815A-8AAB2CE88E03}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
