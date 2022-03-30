@@ -134,6 +134,7 @@ int main(int argc, char** argv)
 		int thisCapacity = returnPureCapacity(thisPair, hist);
 		if (thisCapacity<=0) {
 			cout << "fail to embed: info is too long" << endl;
+			cout << "这个算法对于这张图片的容量限制为" << toEmbedIndex << "位" << endl;
 			return -1;
 		}
 		addInfo.pairs.push_back(thisPair);
