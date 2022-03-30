@@ -6,7 +6,6 @@
 #include<fstream>
 #include <cassert>
 #include"encoder.h"
-#include<json/json.h>
 using namespace cv;
 using namespace std;
 
@@ -84,7 +83,11 @@ int main(int argc, char** argv)
 	}
 	Mat image;
 	image = imread(argv[1], IMREAD_GRAYSCALE); // Read the file
-	string toEmbed = argv[2];
+
+	ifstream ifile1(argv[2]);
+	string toEmbed;
+	ifile1 >> toEmbed;
+
 	if (image.empty())
 	{
 		cout << "Could not open or find the image" << endl;
@@ -301,21 +304,6 @@ int main(int argc, char** argv)
 here:
 
 	imwrite("embed.bmp", image);
-	Json::Value root;
-	Json::FastWriter writer;
-	root["length"] = addInfo.toembedLength;
-	for (int i = 0; i < addInfo.mask.size(); i++) {
-		root["mask"][i] = addInfo.mask[i];
-	}
-
-	root["imageGrayscaleAt_0_0"] = addInfo.imageGrayscaleAt_0_0;
-	root["imageGrayscaleAt_0_1"] = addInfo.imageGrayscaleAt_0_1;
-
-	string json_file = writer.write(root);
-
-	ofstream OutFile("addinfo.json"); 
-	OutFile << json_file;
-	OutFile.close();
 
 	cout << "success!" << endl;
 

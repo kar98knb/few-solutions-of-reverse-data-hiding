@@ -261,6 +261,8 @@ int main(int argc, char** argv) {
 	}
 
 here:
+	ofstream outfile("out.txt");
+	outfile << embedInfo.substr(addinfo.totalAddLength);
 	cout << "嵌入的信息为：" << embedInfo.substr(addinfo.totalAddLength) << endl;
 
 	//构造附加信息类的实例
@@ -280,7 +282,7 @@ here:
 	while (temp_lengthForBitmapMinLength != 0) {
 		string bitmapMinLength = embedInfo.substr(56 + 16 * times + 8 * timeFor_bitmapMinLength, 8);
 		int thisbitmapMinLength = 0;
-		for (int i = 7, mask = 1; i >= 0; i++) {
+		for (int i = 7, mask = 1; i >= 0; i--) {
 			if (bitmapMinLength[7 - i] == '1') {
 				thisbitmapMinLength += mask;
 			}
@@ -356,6 +358,9 @@ here:
 			count += i;
 		}
 	}
+
+	image.at<uchar>(0, 0) = addinfo.imageGrayscaleAt_0_0;
+	image.at<uchar>(0, 1) = addinfo.imageGrayscaleAt_0_1;
 
 there:
 	imwrite("output.bmp", image);
