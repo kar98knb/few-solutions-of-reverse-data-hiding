@@ -6,6 +6,10 @@ using namespace std;
 //帮助你生成长01字符串
 int main(int argc, char** argv) {
 	ofstream file("input.txt",ios::app);
+	if (argc != 2) {
+		cout << "请输入模式r";
+		return -1;
+	}
 	if (argv[1][1] == 'r') {
 		string out;
 		srand((int)time(0));  //40*32=1280

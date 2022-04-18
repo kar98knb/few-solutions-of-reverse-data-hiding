@@ -13,7 +13,20 @@ using namespace cv;
 using namespace std;
 
 
-void Ini(string embedInfo,additonalInfo &addinfo) {
+void usingHis(Mat image);
+void usingDE(Mat image);
+
+bool isChangeable(int mean, int dif) {
+	int min = (2 * (255 - mean) < 2 * mean + 1) ? 2 * (255 - mean) : 2 * mean + 1;
+	if (abs(2 * (dif >> 1) + 1) < min && abs(2 * (dif >> 1)) < min) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void Ini(string embedInfo,addInfoHis &addinfo) {
 	string totalAddLength = embedInfo.substr(0, 16);
 	string toembedLength = embedInfo.substr(32, 16);
 	for (int i = 15,mask = 1; i >= 0; i--) {
@@ -43,27 +56,94 @@ void Ini(string embedInfo,additonalInfo &addinfo) {
 	}
 }
 
+int str_to_int(string str) {
+	int ans = 0;
+	int mask = 1;
+	for (int i = str.size() - 1; i >= 0; i--) {
+		if (str[i] == '1') {
+			ans += mask;
+		}
+		mask <<= 1;
+	}
+	return ans;
+}
+
+string recoverBitmap(string &str,int limit) {
+	string ans;
+	bool compressed = false, isone = false;
+	int index = 0;
+	while (1) {
+		string temp = str.substr(index, runlengthcode + 2);
+		compressed = str[index] == '1' ? true : false;
+		if (compressed) {
+			isone = str[index+1] == '1' ? true : false;
+			int count = str_to_int(temp.substr(2))+1;
+			if (isone) {
+				for (int i = 0; i < count; i++) {
+					ans += '1';
+				}
+			}
+			else {
+				for (int i = 0; i < count; i++) {
+					ans += '0';
+				}
+			}
+		}
+		else {
+			ans += temp.substr(2);
+		}
+		index += (runlengthcode+2);
+		if (ans.size() >= limit) {
+			ans.substr(0, limit);
+			str = str.substr(index);
+			break;
+		}
+	}
+	return ans;
+}
+
+
 int main(int argc, char** argv) {
-	if (argc != 2) {
-		cout << "请输入图片路径" << endl;
+	if (argc != 3) {
+		cout << "请输入图片路径和提取方式" << endl;
 		return -1;
 	}
 
 	Mat image;
 	image = imread(argv[1], IMREAD_GRAYSCALE); // Read the file
-
-	additonalInfo addinfo(image.rows,image.cols);
-	pair<int, int> firstpair = make_pair(image.at<uchar>(0, 0), image.at<uchar>(0, 1));
-	image.at<uchar>(0, 0) = 0; image.at<uchar>(0, 1) = 0;
 	if (image.empty())
 	{
 		cout << "Could not open or find the image" << endl;
 		return -1;
 	}
 
+	if (argv[2][1] == 'h') {
+		usingHis(image);
+		cout << "成功使用直方图提取"<<endl;
+		return 0;
+	}
+	else if (argv[2][1] == 'd') {
+		usingDE(image);
+		cout << "成功使用差分扩展提取" << endl;
+		return 0;
+	}
+	else {
+		cout << "请输入正确参数";
+		return -1;
+	}
+	return -1;
+
+}
+
+void usingHis(Mat image) {
+	addInfoHis addinfo(image.rows, image.cols);
+	pair<int, int> firstpair = make_pair(image.at<uchar>(0, 0), image.at<uchar>(0, 1));
+	image.at<uchar>(0, 0) = 0; image.at<uchar>(0, 1) = 0;
+
+
 	addinfo.pairs.push_back(firstpair);
 	string embedInfo;
-	
+
 	int times = 0;
 	pair<int, int> thispair = firstpair;
 	bool isIni = false;
@@ -91,7 +171,7 @@ int main(int argc, char** argv) {
 					goto here;
 				}
 			}
-			
+
 		}
 		for (int i = 1; i < image.rows; i++) {
 			for (int j = 0; j < image.cols; j++) {
@@ -167,7 +247,7 @@ int main(int argc, char** argv) {
 						goto here;
 					}
 				}
-				
+
 			}
 		}
 
@@ -176,7 +256,7 @@ int main(int argc, char** argv) {
 
 
 
-	
+
 	//提取全部的信息（如果提取了第一对点的信息就完成了全部信息的提取，那么以下代码就不会执行）
 	while (1) {
 		if (embedInfo.length() == (addinfo.toembedLength + addinfo.totalAddLength)) {
@@ -257,13 +337,13 @@ int main(int argc, char** argv) {
 				}
 			}
 		}
-		
+
 	}
 
 here:
 	ofstream outfile("out.txt");
 	outfile << embedInfo.substr(addinfo.totalAddLength);
-	cout << "嵌入的信息为：" << embedInfo.substr(addinfo.totalAddLength) << endl;
+	//cout << "嵌入的信息为：" << embedInfo.substr(addinfo.totalAddLength) << endl;
 
 	//构造附加信息类的实例
 	int row = 0;
@@ -365,6 +445,97 @@ here:
 there:
 	imwrite("output.bmp", image);
 
+}
 
-	return 0;
+void usingDE(Mat image)
+{
+	string allEmbed;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j += 2) {
+			int mean = (image.at<uchar>(i, j) + image.at<uchar>(i, j + 1)) >> 1;
+			int dif = image.at<uchar>(i, j) - image.at<uchar>(i, j + 1);
+			if (isChangeable(mean, dif)) {
+				allEmbed += to_string(dif & 1);
+				//cout << i << ' ' << j << ' ' << dif << endl;
+			}
+		}
+	}
+
+	int allLength = str_to_int(allEmbed.substr(0, 32));
+	int offset = str_to_int(allEmbed.substr(32, 32));
+	string realEmbed = allEmbed.substr(64);
+
+	string bitmap = recoverBitmap(realEmbed, image.cols * image.rows / 2);
+	int LSBcount = 0;
+	for (int i = 0; i < bitmap.size(); i++) {
+		if (bitmap[i] == '0') {
+			LSBcount++;
+		}
+	}
+
+	string LSB = realEmbed.substr(0,LSBcount);
+	string embed = realEmbed.substr(LSBcount, offset);
+
+	int indexforLSB = 0;
+	int countforAllLength = 0;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j += 2) {
+			if (i == 67 && j == 156){
+				int a=0;
+			}
+			int mean = (image.at<uchar>(i, j) + image.at<uchar>(i, j + 1)) >> 1;
+			int dif = image.at<uchar>(i, j) - image.at<uchar>(i, j + 1);
+			if (isChangeable(mean, dif)) {
+				int olddif;
+				if (bitmap[(i * image.rows + j)/2] == '1') {
+					olddif = dif >>1;
+				}
+				else {
+					if (dif >= 0 && dif <= 1) {
+						olddif = 1;
+					}
+					else if (dif >= -2 && dif <= -1) {
+						olddif = -2;
+					} 
+					else {
+						olddif = 2 * (dif>>1) + (LSB[indexforLSB] == '1' ? 1 : 0);
+						indexforLSB++;
+					}
+
+				}
+				int oldx = 0, oldy = 0;
+				if (olddif > 0) {
+					if ((olddif & 1) == 0) {
+						oldx = mean + (olddif + 1) / 2;
+						oldy = mean - (olddif) / 2;
+					}
+					else {
+						oldx = mean + (olddif + 1) / 2;
+						oldy = mean - (olddif) / 2;
+					}
+				}
+				else {
+					if ((olddif & 1) == 0) {
+						oldx = mean + (olddif) / 2;
+						oldy = mean - (olddif) / 2;
+					}
+					else {
+						oldx = mean + (olddif) / 2;
+						oldy = mean - (olddif-1) / 2;
+					}
+				}
+				image.at<uchar>(i, j) = oldx; image.at<uchar>(i, j + 1) = oldy;
+				countforAllLength++;
+				if (countforAllLength == allLength) {
+					goto there1;
+				}
+			}
+			
+		}
+	}
+
+there1:
+	imwrite("output.bmp", image);
+	ofstream outfile("out.txt");
+	outfile << embed;
 }

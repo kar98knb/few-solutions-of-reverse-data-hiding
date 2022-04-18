@@ -8,6 +8,30 @@ using namespace cv;
 using namespace std;
 
 int main(int argc, char** argv) {
+	if (argc == 3) {
+		ifstream ifile1(argv[1]);
+		string sourceInfo;
+		ifile1 >> sourceInfo;
+
+		ifstream ifile2(argv[2]);
+		string ouputInfo;
+		ifile2 >> ouputInfo;
+
+		int index = 0;
+		while (1) {
+			if (sourceInfo[index] != ouputInfo[index]) {
+				cout<< "未通过字符串检验，第一次不匹配的位置为" << index + 1 << endl;
+				break;
+				
+			}
+			index++;
+			if (index == sourceInfo.size() - 1 || index == ouputInfo.size() - 1) {
+				cout << index;
+				break;
+			}
+		}
+		return -1;
+	}
 	if (argc != 5) {
 		cout << "请输入四个参数，前两个为嵌入图片路径和要嵌入的信息，后两个为decoder生成的图片和输出文本" << endl;
 		return -1;

@@ -2,10 +2,17 @@
 #include<vector>
 #include <iostream>
 using namespace std;
-class additonalInfo {
+
+#define DEthreshold 40
+#define runlengthcode 8
+#define offsetLength 32
+
+
+//直方图算法使用
+class addInfoHis {
 public:
-	additonalInfo(int rows, int cols) :rows(rows), cols(cols) {}
-	additonalInfo(int length, int imageGrayscale_0_0, int imageGrayscale_0_1,
+	addInfoHis(int rows, int cols) :rows(rows), cols(cols) {}
+	addInfoHis(int length, int imageGrayscale_0_0, int imageGrayscale_0_1,
 		int rows, int cols):rows(rows),cols(cols) {
 		for (int i = 0; i < 256; i++) {
 			this->mask.push_back(0);
@@ -102,4 +109,17 @@ public:
 
 		return extendInfo;
 	}
+};
+
+//DE算法使用
+class addInfoDE {
+public:
+	addInfoDE(){}
+
+	vector<pair<int, int>> EZ;
+	vector<pair<int, int>> EN1;
+	vector<pair<int, int>> EN2;
+	vector<pair<int, int>> CN;
+	string LSB;
+	vector<pair<int, int>> NC;
 };
