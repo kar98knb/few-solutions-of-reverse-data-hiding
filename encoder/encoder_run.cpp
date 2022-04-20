@@ -518,14 +518,14 @@ void usingDE(Mat image, string toEmbed) {
 	}
 
 	string compressMap = compressBitmap(bitmap, runlengthcode);
-	cout << addInfoDE.EZ.size() << endl;
-	cout << addInfoDE.EN1.size() << endl;
-	cout << addInfoDE.EN2.size() << endl;
-	cout << addInfoDE.CN.size() << endl;
-	cout << addInfoDE.NC.size() << endl;
-	cout << bitmap.length() << endl;
-	cout << compressMap.length() << endl;
-	cout << addInfoDE.LSB.size() << endl;
+	cout << "EZ:"<< addInfoDE.EZ.size() << endl;
+	cout << "EN1:" << addInfoDE.EN1.size() << endl;
+	cout << "EN2:" << addInfoDE.EN2.size() << endl;
+	cout << "CN:" << addInfoDE.CN.size() << endl;
+	cout << "NC:" << addInfoDE.NC.size() << endl;
+	cout << "bitmap length:" << bitmap.length() << endl;
+	cout << "compressMap length:" << compressMap.length() << endl;
+	cout << "LSB length:" << addInfoDE.LSB.size() << endl;
 	int offset = offsetLength;
 	int capacity = addInfoDE.EZ.size() + addInfoDE.EN1.size() + addInfoDE.EN2.size() - addInfoDE.LSB.size() - compressMap.size()- 2*offset;
 	if (toEmbed.size() > capacity) {
@@ -539,9 +539,9 @@ void usingDE(Mat image, string toEmbed) {
 	int index = 0;
 	for (int i = 0; i < image.rows; i++) {
 		for (int j = 0; j < image.cols; j += 2) {
-			if (i == 106 && j == 130) {
+			/*if (i == 0 && j == 0) {
 				int a = 0;
-			}
+			}*/
 			int mean = (image.at<uchar>(i, j) + image.at<uchar>(i, j + 1)) >> 1;
 			int dif = image.at<uchar>(i, j) - image.at<uchar>(i, j + 1);
 			if (isExpandable(mean, dif)) {
@@ -572,7 +572,7 @@ void usingDE(Mat image, string toEmbed) {
 			}
 			else if (isChangeable(mean, dif)) {
 				//cout << i << ' ' << j << ' ' << (int)image.at<uchar>(i, j) << ' ' << (int)image.at<uchar>(i, j + 1) << ' ';
-				int newdif = 2*(dif / 2) + (allEmbed[index] == '1' ? 1 : 0);
+				int newdif = 2*(dif >> 1) + (allEmbed[index] == '1' ? 1 : 0);
 				int newx = mean + ((newdif > 0) ? ((newdif + 1) / 2) : (newdif  / 2));
 				int newy = mean - (newdif >>1);
 				image.at<uchar>(i, j) = newx; image.at<uchar>(i, j + 1) = newy;

@@ -94,7 +94,7 @@ string recoverBitmap(string &str,int limit) {
 		}
 		index += (runlengthcode+2);
 		if (ans.size() >= limit) {
-			ans.substr(0, limit);
+			ans = ans.substr(0, limit);
 			str = str.substr(index);
 			break;
 		}
@@ -467,11 +467,17 @@ void usingDE(Mat image)
 
 	string bitmap = recoverBitmap(realEmbed, image.cols * image.rows / 2);
 	int LSBcount = 0;
-	for (int i = 0; i < bitmap.size(); i++) {
-		if (bitmap[i] == '0') {
-			LSBcount++;
+	for (int i = 0; i < image.rows; i++) {
+		for (int j = 0; j < image.cols; j+=2) {
+			int mean = (image.at<uchar>(i, j) + image.at<uchar>(i, j + 1)) >> 1;
+			int dif = image.at<uchar>(i, j) - image.at<uchar>(i, j + 1);
+			if (isChangeable(mean, dif)&&bitmap[(i*image.cols+j)>>1]=='0'
+				&&(dif!=1 && dif != 0 && dif != -1 &&dif!=-2)) {
+				LSBcount++;
+			}
 		}
 	}
+
 
 	string LSB = realEmbed.substr(0,LSBcount);
 	string embed = realEmbed.substr(LSBcount, offset);
@@ -480,9 +486,9 @@ void usingDE(Mat image)
 	int countforAllLength = 0;
 	for (int i = 0; i < image.rows; i++) {
 		for (int j = 0; j < image.cols; j += 2) {
-			if (i == 67 && j == 156){
+			/*if (i == 67 && j == 156){
 				int a=0;
-			}
+			}*/
 			int mean = (image.at<uchar>(i, j) + image.at<uchar>(i, j + 1)) >> 1;
 			int dif = image.at<uchar>(i, j) - image.at<uchar>(i, j + 1);
 			if (isChangeable(mean, dif)) {
