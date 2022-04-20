@@ -11,8 +11,8 @@ using namespace std;
 
 
 
-void usingHis(Mat image, string toEmbed);
-void usingDE(Mat image, string toEmbed);
+void usingHis(Mat& image, string toEmbed);
+void usingDE(Mat& image, string toEmbed);
 
 bool histIsHorizontal(Mat hist) {
 	int test = hist.at<float>(0);
@@ -231,6 +231,18 @@ string compressBitmap(string bitmap, int limit) {
 	return ans;
 }
 
+double getPSNR(Mat image1, Mat image2) {
+	double allMSE = 0;
+	for(int i=0;i<image1.rows;i++){
+		for (int j = 0; j < image1.cols; j++) {
+			double grey1 = image1.at<uchar>(i, j), grey2 = image2.at<uchar>(i, j);
+			allMSE += ((grey1 - grey2) * (grey1 - grey2));
+		}
+	}
+	double MSE = allMSE / (image1.rows * image1.cols);
+	return 10*log10(255 * 255 / MSE);
+}
+
 
 int main(int argc, char** argv)
 {
@@ -240,6 +252,7 @@ int main(int argc, char** argv)
 	}
 	Mat image;
 	image = imread(argv[1], IMREAD_GRAYSCALE); // Read the file
+	Mat image1 = imread(argv[1], IMREAD_GRAYSCALE);
 
 	ifstream ifile1(argv[2]);
 	string toEmbed;
@@ -254,10 +267,12 @@ int main(int argc, char** argv)
 
 	if (argv[3][1]=='h') {
 		usingHis(image, toEmbed);
+		cout << "PSNR值为" << getPSNR(image, image1) << endl;
 		return 0;
 	}
 	else if (argv[3][1] == 'd') {
 		usingDE(image, toEmbed);
+		cout << "PSNR值为" << getPSNR(image, image1) << endl;
 		return 0;
 	}
 	else {
@@ -268,7 +283,7 @@ int main(int argc, char** argv)
 }
 
 
-void usingHis(Mat image, string toEmbed) {
+void usingHis(Mat& image, string toEmbed) {
 	int histSize = 256;
 	float range[] = { 0, 256 }; //the upper boundary is exclusive
 	const float* histRange[] = { range };
@@ -280,9 +295,9 @@ void usingHis(Mat image, string toEmbed) {
 
 	assert(!histIsHorizontal(hist));
 
-	/*for (int i = 0; i < 256; i++) {
-		cout << i << ',' << hist.at<float>(i) << endl;
-	}*/
+	//for (int i = 0; i < 256; i++) {
+	//	cout << i << ',' << hist.at<float>(i) << endl;
+	//}
 
 
 	int toEmbedIndex = 0;
@@ -480,7 +495,8 @@ here1:
 	cout << "success!" << endl;
 }
 
-void usingDE(Mat image, string toEmbed) {
+void usingDE(Mat& image, string toEmbed) {
+	
 	addInfoDE addInfoDE;
 	string bitmap;
 	for (int i = 0; i < image.rows; i++) {
@@ -530,7 +546,7 @@ void usingDE(Mat image, string toEmbed) {
 	int offset = offsetLength;
 	int capacity = addInfoDE.EZ.size() + addInfoDE.EN1.size() + addInfoDE.EN2.size() - addInfoDE.LSB.size() - compressMap.size()- 2*offset;
 	if (toEmbed.size() > capacity) {
-		cout << "嵌入失败，超出容量限制"<<endl;
+		cout << "嵌入失败，超出容量限制，最大容量为"<< capacity <<endl;
 		exit(-1);
 	}
 
@@ -592,6 +608,7 @@ void usingDE(Mat image, string toEmbed) {
 
 here2:
 	imwrite("embed.bmp", image);
+	
 	cout << "success!" << endl;
 }
 
