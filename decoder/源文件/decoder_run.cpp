@@ -348,10 +348,10 @@ here:
 	//构造附加信息类的实例
 	int row = 0;
 	int col = 0;
-	for (int i = 1; i < row; i <<= 1) {
+	for (int i = 1; i < image.rows; i <<= 1) {
 		row++;
 	}
-	for (int i = 1; i < col; i <<= 1) {
+	for (int i = 1; i < image.cols; i <<= 1) {
 		col++;
 	}
 	times++;
@@ -363,7 +363,7 @@ here:
 		string bitmapMinLength = embedInfo.substr(56 + 16 * times + 8 * timeFor_bitmapMinLength, 8);
 		int thisbitmapMinLength = 0;
 		for (int i = 7, mask = 1; i >= 0; i--) {
-			if (bitmapMinLength[7 - i] == '1') {
+			if (bitmapMinLength[i] == '1') {
 				thisbitmapMinLength += mask;
 			}
 			mask <<= 1;
@@ -374,24 +374,31 @@ here:
 		continue;
 	}
 
+
 	for (int i = 0; i < addinfo.bitmapMinLength.size(); i++) {
 		int temp = addinfo.bitmapMinLength[i];
-		string bitmap1 = embedInfo.substr(56 + 16 * times + 8 * timeFor_bitmapMinLength + (row + col) * timeFor_bitmap1, (row + col));
-		string rows = bitmap1.substr(0, row), cols = bitmap1.substr(row);
-		int thisrow = 0, thiscol = 0;
-		for (int rowsIndex = rows.length() - 1, mask = 1; rowsIndex >= 0; rowsIndex--) {
-			if (rows[rowsIndex] == '1') {
-				thisrow += mask;
+		int count = 0;
+		while (count < temp) {
+			int index = 56 + 16 * times + 8 * timeFor_bitmapMinLength + (row + col) * timeFor_bitmap1;
+			string bitmap1 = embedInfo.substr(index, (row + col));
+			string rows = bitmap1.substr(0, row), cols = bitmap1.substr(row);
+			int thisrow = 0, thiscol = 0;
+			for (int rowsIndex = rows.length() - 1, mask = 1; rowsIndex >= 0; rowsIndex--) {
+				if (rows[rowsIndex] == '1') {
+					thisrow += mask;
+				}
+				mask <<= 1;
 			}
-			mask <<= 1;
-		}
-		for (int colsIndex = cols.length() - 1, mask = 1; colsIndex >= 0; colsIndex--) {
-			if (cols[colsIndex] == '1') {
-				thisrow += mask;
+			for (int colsIndex = cols.length() - 1, mask = 1; colsIndex >= 0; colsIndex--) {
+				if (cols[colsIndex] == '1') {
+					thiscol += mask;
+				}
+				mask <<= 1;
 			}
-			mask <<= 1;
+			addinfo.bitmap1.push_back(make_pair(thisrow, thiscol));
+			count++;
+			timeFor_bitmap1++;
 		}
-		addinfo.bitmap1.push_back(make_pair(thisrow, thiscol));
 	}
 
 	//进行图像复原

@@ -41,7 +41,7 @@ public:
 
 		//×ª»»bitmap1
 		for (int i = bitmap1.size() - 1; i >= 0; i--) {
-			int row = pairs[i].first, col = pairs[i].second;
+			int row = bitmap1[i].first, col = bitmap1[i].second;
 			for (int j = 1; j < cols; j <<= 1) {
 				extendInfo = to_string(col & 1) + extendInfo;
 				col >>= 1;
@@ -87,13 +87,15 @@ public:
 		}
 
 		//×ª»»imageGrayscaleAt_0_0,imageGrayscaleAt_0_1(8+8bits)
-		int temp = imageGrayscaleAt_0_0;
+		
+
+		int temp = imageGrayscaleAt_0_1;
 		for (int i = 0; i < 8; i++) {
 			extendInfo = to_string(temp & 1) + extendInfo;
 			temp >>= 1;
 		}
 
-		temp = imageGrayscaleAt_0_1;
+		temp = imageGrayscaleAt_0_0;
 		for (int i = 0; i < 8; i++) {
 			extendInfo = to_string(temp & 1) + extendInfo;
 			temp >>= 1;

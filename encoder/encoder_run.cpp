@@ -61,6 +61,9 @@ pair<int, int> find_Nth_pair(addInfoHis addInfo, Mat hist) {
 	minIndex2 = maxIndex;
 	for (int i = maxIndex; i < 256; i++)
 	{
+		if (addInfo.mask[i] != 0) {
+			break;
+		}
 		if (hist.at<float>(i) == 0) {
 			minIndex1 = i;
 			break;
@@ -69,13 +72,14 @@ pair<int, int> find_Nth_pair(addInfoHis addInfo, Mat hist) {
 			minIndex1 = i;
 			continue;
 		}
-		if (addInfo.mask[i] == 1) {
-			break;
-		}
+		
 	}
 
 	for (int i = maxIndex; i >= 0; i--)
 	{
+		if (addInfo.mask[i] != 0) {
+			break;
+		}
 		if (hist.at<float>(i) == 0) {
 			minIndex2 = i;
 			break;
@@ -83,9 +87,6 @@ pair<int, int> find_Nth_pair(addInfoHis addInfo, Mat hist) {
 		if ((hist.at<float>(i) < hist.at<float>(minIndex2)) && addInfo.mask[i] == 0) {
 			minIndex2 = i;
 			continue;
-		}
-		if (addInfo.mask[i] == 1) {
-			break;
 		}
 	}
 	
@@ -279,9 +280,9 @@ void usingHis(Mat image, string toEmbed) {
 
 	assert(!histIsHorizontal(hist));
 
-	for (int i = 0; i < 256; i++) {
+	/*for (int i = 0; i < 256; i++) {
 		cout << i << ',' << hist.at<float>(i) << endl;
-	}
+	}*/
 
 
 	int toEmbedIndex = 0;

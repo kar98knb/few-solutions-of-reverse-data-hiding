@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
 	for (int i = 0; i < sourceImage.rows; i++) {
 		for (int j = 0; j < sourceImage.cols; j++) {
 			if (sourceImage.at<uchar>(i, j) != outputImage.at<uchar>(i, j)) {
+				int x = sourceImage.at<uchar>(i, j), y = outputImage.at<uchar>(i, j);
 				cout << "未通过图片检验，第一次不匹配的位置为" << i << ' '<< j << endl;
 				imageFlag = false;
 				goto here;
